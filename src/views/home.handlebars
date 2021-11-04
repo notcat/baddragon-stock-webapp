@@ -1,1 +1,69 @@
-<h1>Example App: Home</h1>
+<script>
+
+    async function AskForPermission() {
+        const permission = await window.Notification.requestPermission()
+
+        if (permission !== 'granted') {
+            throw new Error('Permission not granted for Notification')
+        }
+    }
+
+    async function Subscribe() {
+        // grab this from handlebars instead of hardcoded
+        const publicVapidKey = 'BGp8cIoDXAnmKwOExLVUDg0B9fxiiMmWTXfbqbXKDvR-eK0zwqa-kti9lqYDbFUPOqGOUS8tIzbY_6SrY2BaMLU';
+
+        // https://gist.github.com/Klerith/80abd742d726dd587f4bd5d6a0ab26b6
+        function urlBase64ToUint8Array(base64String) {
+            const padding = "=".repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/\-/g, "+")
+                .replace(/_/g, "/");
+
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+        //check if the service worker can work in the current browser
+        if ('serviceWorker' in navigator) {
+            send().catch(err => console.error(err));
+        }
+
+        //register the service worker, register our push api, send the notification
+        async function send() {
+            //register service worker
+            const register = await navigator.serviceWorker.register('/worker.js', {
+                scope: '/'
+            });
+
+            //register push
+            const subscription = await register.pushManager.subscribe({
+                userVisibleOnly: true,
+
+                //public vapid key
+                applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+            });
+
+            console.log(JSON.stringify(subscription));
+
+            //Send push notification
+            await fetch("/subscribe", {
+                method: "POST",
+                body: JSON.stringify(subscription),
+                headers: {
+                    "content-type": "application/json"
+                }
+            }).then(() => console.log("Sent!"));
+        }
+    }
+</script>
+
+<h1>Example App: Home - Subscribe</h1>
+<h2>Subscribe</h2>
+
+<button id="permission-button" onclick="AskForPermission()">Ask Permission</button>
+<button id="subscribe-button" onclick="Subscribe()">Subscribe</button>
