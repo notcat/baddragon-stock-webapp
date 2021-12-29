@@ -9,7 +9,17 @@
     }
 
     async function Subscribe() {
-        // grab this from handlebars instead of hardcoded
+        // Get the toys the user wants to subscribe
+        //let toySelectList = document.getElementById("toys");
+
+        const selected = document.querySelectorAll('#toys option:checked');
+        const values = Array.from(selected).map(el => el.value);
+
+        const trackedItems = {
+            "toys": values,
+        };
+
+        // TODO: grab this from handlebars instead of hardcoded
         const publicVapidKey = 'BGp8cIoDXAnmKwOExLVUDg0B9fxiiMmWTXfbqbXKDvR-eK0zwqa-kti9lqYDbFUPOqGOUS8tIzbY_6SrY2BaMLU';
 
         // https://gist.github.com/Klerith/80abd742d726dd587f4bd5d6a0ab26b6
@@ -50,10 +60,18 @@
 
             console.log(JSON.stringify(subscription));
 
+            // Combine the subscription object with the tracked items array
+            const payload = {
+                subscription,
+                trackedItems,
+            };
+
+            console.log(JSON.stringify(payload));
+
             //Send push notification
             await fetch("/subscribe", {
                 method: "POST",
-                body: JSON.stringify(subscription),
+                body: JSON.stringify(payload),
                 headers: {
                     "content-type": "application/json"
                 }
@@ -64,6 +82,13 @@
 
 <h1>Example App: Home - Subscribe</h1>
 <h2>Subscribe</h2>
+
+<select name="toys" id="toys" multiple>
+    <option value="orochi">Orochi</option>
+    <option value="demogorgon">Demogordon</option>
+    <option value="crackers">Crackers</option>
+    <option value="meng">Meng</option>
+</select>
 
 <button id="permission-button" onclick="AskForPermission()">Ask Permission</button>
 <button id="subscribe-button" onclick="Subscribe()">Subscribe</button>

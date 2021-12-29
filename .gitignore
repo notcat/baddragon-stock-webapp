@@ -1,3 +1,6 @@
+# Typescript compliation folder
+dist/
+
 # Logs
 logs
 *.log
